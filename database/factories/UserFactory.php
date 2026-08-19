@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Models\Role;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
@@ -29,6 +30,7 @@ class UserFactory extends Factory
             'email' => fake()->unique()->safeEmail(),
             'email_verified_at' => now(),
             'password' => static::$password ??= Hash::make('password'),
+            'avatar' => null,
             'remember_token' => Str::random(10),
         ];
     }
@@ -41,5 +43,34 @@ class UserFactory extends Factory
         return $this->state(fn (array $attributes) => [
             'email_verified_at' => null,
         ]);
+    }
+
+    /**
+     * Attach a specific role after creating user.
+     */
+    public function withRole(string $roleName): static
+    {
+        return $this->afterCreating(function (User $user) use ($roleName) {
+            $role = Role::firstOrCreate(
+                ['name' => $roleName],
+                ['display_name' => ucfirst($roleName), 'description' => ucfirst($roleName).' role']
+            );
+            $user->roles()->syncWithoutDetaching([$role->id]);
+        });
+    }
+
+    public function admin(): static
+    {
+        return $this->withRole('admin');
+    }
+
+    public function instructor(): static
+    {
+        return $this->withRole('instructor');
+    }
+
+    public function student(): static
+    {
+        return $this->withRole('student');
     }
 }

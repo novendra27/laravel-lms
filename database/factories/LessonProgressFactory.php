@@ -1,0 +1,25 @@
+<?php
+
+namespace Database\Factories;
+
+use App\Models\Enrollment;
+use App\Models\Lesson;
+use App\Models\LessonProgress;
+use Illuminate\Database\Eloquent\Factories\Factory;
+
+/**
+ * @extends Factory<LessonProgress>
+ */
+class LessonProgressFactory extends Factory
+{
+    protected $model = LessonProgress::class;
+
+    public function definition(): array
+    {
+        return [
+            'enrollment_id' => Enrollment::factory(),
+            'lesson_id' => Lesson::factory(),
+            'completed_at' => now(),
+        ];
+    }
+}
