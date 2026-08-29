@@ -22,7 +22,7 @@ export default function UserDetailModal({
             onClose={onClose}
             title="Informasi Detail Pengguna"
             description="Ringkasan data profil akun dan hak akses pengguna."
-            maxWidth="md"
+            maxWidth="xl"
         >
             <div className="space-y-5">
                 {/* Header Banner */}

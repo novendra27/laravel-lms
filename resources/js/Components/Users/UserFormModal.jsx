@@ -99,7 +99,7 @@ export default function UserFormModal({
                     ? `Perbarui informasi akun dan hak akses peran untuk ${user?.name}.`
                     : 'Daftarkan akun pengguna baru ke dalam sistem pembelajaran.'
             }
-            maxWidth="lg"
+            maxWidth="2xl"
         >
             <form onSubmit={handleSubmit} className="space-y-4">
                 {/* Avatar Picker with Live Preview */}

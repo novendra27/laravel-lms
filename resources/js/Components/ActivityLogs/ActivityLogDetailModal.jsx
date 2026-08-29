@@ -34,7 +34,7 @@ export default function ActivityLogDetailModal({
             onClose={onClose}
             title="Detail Log Aktivitas Sistem"
             description="Informasi jejak audit mutasi data yang tercatat."
-            maxWidth="lg"
+            maxWidth="2xl"
         >
             <div className="space-y-4">
                 {/* Header Summary */}
