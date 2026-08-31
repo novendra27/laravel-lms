@@ -84,7 +84,7 @@ class UserService
     }
 
     /**
-     * Delete user and their stored avatar file.
+     * Soft-delete user account (account deactivated, avatar kept for restore).
      *
      * @throws ValidationException
      */
@@ -97,11 +97,39 @@ class UserService
         }
 
         return DB::transaction(function () use ($user) {
+            return (bool) $user->delete();
+        });
+    }
+
+    /**
+     * Restore a soft-deleted user.
+     */
+    public function restoreUser(User $user): bool
+    {
+        return DB::transaction(function () use ($user) {
+            return (bool) $user->restore();
+        });
+    }
+
+    /**
+     * Permanently delete user and their stored avatar file.
+     *
+     * @throws ValidationException
+     */
+    public function forceDeleteUser(User $user, User $actor): bool
+    {
+        if ($user->id === $actor->id) {
+            throw ValidationException::withMessages([
+                'error' => 'Anda tidak dapat menghapus permanen akun Anda sendiri.',
+            ]);
+        }
+
+        return DB::transaction(function () use ($user) {
             if ($user->avatar && Storage::disk('public')->exists($user->avatar)) {
                 Storage::disk('public')->delete($user->avatar);
             }
 
-            return (bool) $user->delete();
+            return (bool) $user->forceDelete();
         });
     }
 }

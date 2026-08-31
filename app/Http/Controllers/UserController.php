@@ -16,13 +16,22 @@ use Inertia\Response;
 class UserController extends Controller
 {
     /**
-     * Display a paginated listing of users with search and role filter.
+     * Display a paginated listing of users with search, role filter, and trashed status tab.
      */
     public function index(Request $request): Response
     {
         Gate::authorize('viewAny', User::class);
 
+        $status = $request->string('status', 'active')->toString();
+
         $query = User::with('roles')->latest();
+
+        // Handle Soft Delete Tab Filter
+        if ($status === 'trashed') {
+            $query->onlyTrashed();
+        } elseif ($status === 'all') {
+            $query->withTrashed();
+        }
 
         // Search Filter (name or email)
         if ($request->filled('search')) {
@@ -44,11 +53,13 @@ class UserController extends Controller
         $users = $query->paginate(10)->withQueryString();
 
         $availableRoles = Role::select('id', 'name', 'display_name', 'description')->get();
+        $trashedCount = User::onlyTrashed()->count();
 
         return Inertia::render('Users/Index', [
             'users' => $users,
-            'filters' => $request->only(['search', 'role']),
+            'filters' => $request->only(['search', 'role', 'status']),
             'availableRoles' => $availableRoles,
+            'trashedCount' => $trashedCount,
         ]);
     }
 
@@ -89,7 +100,7 @@ class UserController extends Controller
     }
 
     /**
-     * Remove the specified user from storage.
+     * Soft-delete the specified user from storage.
      */
     public function destroy(Request $request, User $user, UserService $userService): RedirectResponse
     {
@@ -100,7 +111,42 @@ class UserController extends Controller
 
         return redirect()->route('users.index')->with(
             'success',
-            "Pengguna '{$userName}' berhasil dihapus dari sistem."
+            "Pengguna '{$userName}' berhasil dinonaktifkan (dipindahkan ke sampah)."
+        );
+    }
+
+    /**
+     * Restore a soft-deleted user.
+     */
+    public function restore(Request $request, int|string $id, UserService $userService): RedirectResponse
+    {
+        $user = User::onlyTrashed()->findOrFail($id);
+
+        Gate::authorize('restore', $user);
+
+        $userService->restoreUser($user);
+
+        return redirect()->back()->with(
+            'success',
+            "Pengguna '{$user->name}' berhasil dipulihkan kembali ke sistem."
+        );
+    }
+
+    /**
+     * Permanently delete a user from storage.
+     */
+    public function forceDelete(Request $request, int|string $id, UserService $userService): RedirectResponse
+    {
+        $user = User::onlyTrashed()->findOrFail($id);
+
+        Gate::authorize('forceDelete', $user);
+
+        $userName = $user->name;
+        $userService->forceDeleteUser($user, $request->user());
+
+        return redirect()->back()->with(
+            'success',
+            "Pengguna '{$userName}' telah dihapus secara permanen dari sistem."
         );
     }
 }

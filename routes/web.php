@@ -55,6 +55,8 @@ Route::middleware('auth')->group(function () {
     |----------------------------------------------------------------------
     */
     Route::middleware('role:admin')->group(function () {
+        Route::post('users/{id}/restore', [UserController::class, 'restore'])->name('users.restore');
+        Route::delete('users/{id}/force-delete', [UserController::class, 'forceDelete'])->name('users.force-delete');
         Route::resource('users', UserController::class)->except(['create', 'edit', 'show']);
         Route::get('activity-logs', [ActivityLogController::class, 'index'])->name('activity-logs.index');
     });
